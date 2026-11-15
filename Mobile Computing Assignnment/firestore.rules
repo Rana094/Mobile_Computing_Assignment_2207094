@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userID}/todos/{todoID} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userID;
+      }
+
+      allow read, delete: if isOwner();
+      allow create: if isOwner()
+        && request.resource.data.keys().hasOnly(['title', 'createdAt'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.createdAt == request.time;
+    }
+  }
+}
